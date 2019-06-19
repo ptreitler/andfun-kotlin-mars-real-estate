@@ -27,18 +27,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-// TODO (01) Create a MarsApiStatus enum with the LOADING, ERROR, and DONE states
+enum class MarsApiStatus {
+    LOADING, ERROR, DONE
+}
+
 /**
  * The [ViewModel] that is attached to the [OverviewFragment].
  */
 class OverviewViewModel : ViewModel() {
 
     // The internal MutableLiveData String that stores the most recent response status
-    // TODO (02) Change _status to type MarsApiStatus
-    private val _status = MutableLiveData<String>()
+    private val _status = MutableLiveData<MarsApiStatus>()
 
     // The external immutable LiveData for the status String
-    val status: LiveData<String>
+    val status: LiveData<MarsApiStatus>
         get() = _status
 
     // Internally, we use a MutableLiveData, because we will be updating the List of MarsProperty
@@ -53,7 +55,7 @@ class OverviewViewModel : ViewModel() {
     private var viewModelJob = Job()
 
     // the Coroutine runs using the Main (UI) dispatcher
-    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main )
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
     /**
      * Call getMarsRealEstateProperties() on init so we can display status immediately.
@@ -68,17 +70,18 @@ class OverviewViewModel : ViewModel() {
      * await to get the result of the transaction.
      */
     private fun getMarsRealEstateProperties() {
-        // TODO (03) Set the correct status for LOADING, ERROR, and DONE
         coroutineScope.launch {
             // Get the Deferred object for our Retrofit request
-            var getPropertiesDeferred = MarsApi.retrofitService.getProperties()
+            val getPropertiesDeferred = MarsApi.retrofitService.getProperties()
             try {
+                _status.value = MarsApiStatus.LOADING
                 // this will run on a thread managed by Retrofit
                 val listResult = getPropertiesDeferred.await()
-                _status.value = "Success: ${listResult.size}"
+                _status.value = MarsApiStatus.DONE
                 _properties.value = listResult
             } catch (e: Exception) {
-                _status.value = "Failure: ${e.message}"
+                _status.value = MarsApiStatus.ERROR
+                _properties.value = listOf()
             }
         }
     }
