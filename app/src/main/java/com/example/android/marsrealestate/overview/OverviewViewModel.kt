@@ -39,20 +39,19 @@ class OverviewViewModel : ViewModel() {
     val status: LiveData<String>
         get() = _status
 
-    // TODO (02) Update the ViewModel to return a LiveData of List<MarsProperty>
     // Internally, we use a MutableLiveData, because we will be updating the MarsProperty with
     // new values
-    private val _property = MutableLiveData<MarsProperty>()
+    private val _properties = MutableLiveData<List<MarsProperty>>()
 
-    // The external LiveData interface to the property is immutable, so only this class can modify
-    val property: LiveData<MarsProperty>
-        get() = _property
+    // The external LiveData interface to the properties is immutable, so only this class can modify
+    val properties: LiveData<List<MarsProperty>>
+        get() = _properties
 
     // Create a Coroutine scope using a job to be able to cancel when needed
     private var viewModelJob = Job()
 
     // the Coroutine runs using the Main (UI) dispatcher
-    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main )
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
     /**
      * Call getMarsRealEstateProperties() on init so we can display status immediately.
@@ -62,7 +61,7 @@ class OverviewViewModel : ViewModel() {
     }
 
     /**
-     * Gets Mars real estate property information from the Mars API Retrofit service and updates the
+     * Gets Mars real estate properties information from the Mars API Retrofit service and updates the
      * [MarsProperty] [LiveData]. The Retrofit service returns a coroutine Deferred, which we await
      * to get the result of the transaction.
      */
@@ -74,9 +73,7 @@ class OverviewViewModel : ViewModel() {
                 // Await the completion of our Retrofit request
                 val listResult = getPropertiesDeferred.await()
                 _status.value = "Success: ${listResult.size} Mars properties retrieved"
-                if (listResult.size > 0) {
-                    _property.value = listResult[0]
-                }
+                _properties.value = listResult
             } catch (e: Exception) {
                 _status.value = "Failure: ${e.message}"
             }

@@ -17,7 +17,35 @@
 
 package com.example.android.marsrealestate.overview
 
-// TODO (06) Create PhotoGridAdapter that extends the RecyclerView ListAdapter with DiffCallback
-// TODO (07) Add unimplemented members for PhotoGridAdapter, create and implement DiffCallback companion class
-// TODO (08) Create and implement the MarsPropertyViewHolder inner class.
-// TODO (09) Override and implement onCreateViewHolder and onBindViewHolder
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.example.android.marsrealestate.databinding.GridViewItemBinding
+import com.example.android.marsrealestate.network.MarsProperty
+
+class PhotoGridAdapter : ListAdapter<MarsProperty, PhotoGridAdapter.MarsPropertyViewHolder>(DiffCallback) {
+    class MarsPropertyViewHolder(private var binding: GridViewItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(marsProperty: MarsProperty) {
+            binding.property = marsProperty
+            binding.executePendingBindings()
+        }
+    }
+
+    companion object DiffCallback : DiffUtil.ItemCallback<MarsProperty>() {
+        override fun areItemsTheSame(oldItem: MarsProperty, newItem: MarsProperty): Boolean =
+                oldItem === newItem
+
+        override fun areContentsTheSame(oldItem: MarsProperty, newItem: MarsProperty): Boolean =
+                oldItem.id == newItem.id
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MarsPropertyViewHolder =
+            MarsPropertyViewHolder(GridViewItemBinding.inflate(LayoutInflater.from(parent.context)))
+
+    override fun onBindViewHolder(holder: MarsPropertyViewHolder, position: Int) {
+        val marsProperty = getItem(position)
+        holder.bind(marsProperty)
+    }
+}
